@@ -1,0 +1,13 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:10
+    environment:
+      - POSTGRES_USER=${PG_USERNAME}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/pg_dump:/mnt/pg_dump
+      - ./data/db:/var/lib/postgresql/data/pgdata
