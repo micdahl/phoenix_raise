@@ -22,21 +22,45 @@ defmodule PhoenixRise.Basics do
   end
 
   def list_countries(criteria) when is_list(criteria) do
-    query = from(p in Country, order_by: [asc: :name])
+    query = from(p in Country)
 
-    Enum.reduce(criteria, [query, 1, 80], fn
-      {:page, page}, [query, _page, per_page] ->
-        [query, page, per_page]
+    Enum.reduce(criteria, [query, 1, 80, "asc", :name], fn
+      {:page, page}, [query, _page, per_page, order, order_by] ->
+        [query, page, per_page, order, order_by]
 
-      {:per_page, per_page}, [query, page, _per_page] ->
-        [from(q in query, limit: ^per_page), page, per_page]
+      {:per_page, per_page}, [query, page, _per_page, order, order_by] ->
+        [from(q in query, limit: ^per_page), page, per_page, order, order_by]
 
-      _, [query, page, per_page] ->
-        [query, page, per_page]
+      {:order, order}, [query, page, per_page, _order, order_by] ->
+        [query, page, per_page, order, order_by]
+
+      {:order_by, order_by}, [query, page, per_page, order, _order_by] ->
+        [query, page, per_page, order, order_by]
+
+      _, [query, page, per_page, order, order_by] ->
+        [query, page, per_page, order, order_by]
     end)
     |> (fn
-          [query, page, per_page] when page > 0 and per_page > 0 ->
-            from(q in query, offset: (^page - 1) * ^per_page)
+          [query, page, per_page, "asc", order_by] when page > 0 and per_page > 0 ->
+            from(q in query,
+              limit: ^per_page,
+              offset: (^page - 1) * ^per_page,
+              order_by: [asc: ^order_by]
+            )
+
+          [query, page, per_page, "desc", order_by] when page > 0 and per_page > 0 ->
+            from(q in query,
+              limit: ^per_page,
+              offset: (^page - 1) * ^per_page,
+              order_by: [desc: ^order_by]
+            )
+
+          [query, page, per_page, _, order_by] when page > 0 and per_page > 0 ->
+            from(q in query,
+              limit: ^per_page,
+              offset: (^page - 1) * ^per_page,
+              order_by: [asc: ^order_by]
+            )
         end).()
     |> Repo.all()
   end

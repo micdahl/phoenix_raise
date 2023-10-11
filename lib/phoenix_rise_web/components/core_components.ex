@@ -485,7 +485,14 @@ defmodule PhoenixRiseWeb.CoreComponents do
       <table class="mt-11 w-[40rem] sm:w-full">
         <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
           <tr>
-            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%= col[:label] %></th>
+            <th
+              :for={col <- @col}
+              class="p-0 pb-4 pr-6 font-normal"
+              phx-click="order-by"
+              phx-value-order-column={col[:label]}
+            >
+              <%= col[:label] %>
+            </th>
             <th class="relative p-0 pb-4"><span class="sr-only"><%= gettext("Actions") %></span></th>
           </tr>
         </thead>
