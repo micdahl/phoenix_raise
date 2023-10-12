@@ -91,7 +91,12 @@ defmodule PhoenixRiseWeb.CountryLive.Index do
        end).(new_order_by, old_order_by, order)
 
     countries =
-      Basics.list_countries(order_by: new_order_by, order: new_order)
+      Basics.list_countries(
+        order_by: new_order_by,
+        order: new_order,
+        page: page,
+        per_page: per_page
+      )
 
     {:noreply,
      stream(socket, :countries, countries, reset: true)
