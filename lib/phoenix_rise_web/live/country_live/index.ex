@@ -4,24 +4,7 @@ defmodule PhoenixRiseWeb.CountryLive.Index do
   alias PhoenixRise.Basics
   alias PhoenixRise.Basics.Country
 
-  @impl true
-  def mount(_params, _session, socket) do
-    per_page = 80
-    page = 1
-    order_by = :name
-    order = "asc"
-
-    {:ok,
-     stream(
-       socket,
-       :countries,
-       Basics.list_countries(per_page: per_page, page: page, order: order, order_by: order_by)
-     )
-     |> assign(per_page: per_page)
-     |> assign(page: page)
-     |> assign(order_by: order_by)
-     |> assign(order: order)}
-  end
+  use PhoenixRiseWeb.Ordering, list_function: &Basics.list_countries/1, stream_atom: :countries
 
   @impl true
   def handle_params(params, _url, socket) do
@@ -57,52 +40,5 @@ defmodule PhoenixRiseWeb.CountryLive.Index do
     {:ok, _} = Basics.delete_country(country)
 
     {:noreply, stream_delete(socket, :countries, country)}
-  end
-
-  def handle_event("load-more", _value, socket) do
-    page = socket.assigns.page
-    order_by = socket.assigns.order_by
-    order = socket.assigns.order
-    per_page = socket.assigns.per_page
-    new_page = page + 1
-
-    additional_countries =
-      Basics.list_countries(page: new_page, order_by: order_by, order: order, per_page: per_page)
-
-    {:noreply,
-     stream(socket, :countries, additional_countries)
-     |> assign(page: new_page)}
-  end
-
-  def handle_event("order-by", value, socket) do
-    new_order_by = String.to_atom(String.downcase(value["order-column"]))
-    old_order_by = socket.assigns.order_by
-    order = socket.assigns.order
-    page = 1
-    per_page = 80
-
-    new_order =
-      (fn
-         new_order_by, old_order_by, "asc" when new_order_by === old_order_by ->
-           "desc"
-
-         _, _, _ ->
-           "asc"
-       end).(new_order_by, old_order_by, order)
-
-    countries =
-      Basics.list_countries(
-        order_by: new_order_by,
-        order: new_order,
-        page: page,
-        per_page: per_page
-      )
-
-    {:noreply,
-     stream(socket, :countries, countries, reset: true)
-     |> assign(page: page)
-     |> assign(per_page: per_page)
-     |> assign(order_by: new_order_by)
-     |> assign(order: new_order)}
   end
 end
