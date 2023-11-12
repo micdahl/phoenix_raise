@@ -4,7 +4,7 @@ defmodule PhoenixRiseWeb.CountryLive.Index do
   alias PhoenixRise.Basics
   alias PhoenixRise.Basics.Country
 
-  use PhoenixRiseWeb.Ordering, list_function: &Basics.list_countries/1, stream_atom: :countries
+  use PhoenixRiseWeb.Ordering, list_function: &Basics.list_countries/2, stream_atom: :countries
 
   @impl true
   def handle_params(params, _url, socket) do

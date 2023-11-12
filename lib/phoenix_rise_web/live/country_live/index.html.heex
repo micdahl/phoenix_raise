@@ -9,6 +9,7 @@
 
 <.table
   id="countries"
+  filters={@filters}
   rows={@streams.countries}
   row_click={fn {_id, country} -> JS.navigate(~p"/countries/#{country}") end}
 >

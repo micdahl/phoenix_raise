@@ -22,7 +22,21 @@ defmodule PhoenixRise.Basics do
   end
 
   def list_countries(criteria) when is_list(criteria) do
+    list_countries(criteria, %{})
+  end
+
+  def list_countries(criteria, filters) do
     query = from(p in Country)
+
+    query =
+      filters
+      |> Map.to_list()
+      |> Enum.reduce(query, fn
+        {key, value}, query ->
+          from(q in query,
+            where: ilike(field(q, ^String.to_atom(String.downcase(key))), ^"%#{value}%")
+          )
+      end)
 
     Enum.reduce(criteria, [query, 1, 80, "asc", :name], fn
       {:page, page}, [query, _page, per_page, order, order_by] ->
@@ -41,13 +55,6 @@ defmodule PhoenixRise.Basics do
         [query, page, per_page, order, order_by]
     end)
     |> (fn
-          [query, page, per_page, "asc", order_by] when page > 0 and per_page > 0 ->
-            from(q in query,
-              limit: ^per_page,
-              offset: (^page - 1) * ^per_page,
-              order_by: [asc: ^order_by]
-            )
-
           [query, page, per_page, "desc", order_by] when page > 0 and per_page > 0 ->
             from(q in query,
               limit: ^per_page,

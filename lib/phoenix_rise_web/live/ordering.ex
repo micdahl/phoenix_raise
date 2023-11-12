@@ -23,16 +23,20 @@ defmodule PhoenixRiseWeb.Ordering do
            socket,
            unquote(stream_atom),
            unquote(list_function).(
-             per_page: unquote(default_page_size),
-             page: unquote(default_start_page),
-             order: unquote(default_order),
-             order_by: unquote(default_order_field)
+             %{
+               per_page: unquote(default_page_size),
+               page: unquote(default_start_page),
+               order: unquote(default_order),
+               order_by: unquote(default_order_field)
+             },
+             %{}
            )
          )
          |> assign(per_page: unquote(default_page_size))
          |> assign(page: unquote(default_start_page))
          |> assign(order_by: unquote(default_order_field))
-         |> assign(order: unquote(default_order))}
+         |> assign(order: unquote(default_order))
+         |> assign(filters: %{})}
       end
 
       def handle_event("load-more", _value, socket) do
@@ -41,13 +45,12 @@ defmodule PhoenixRiseWeb.Ordering do
         order = socket.assigns.order
         per_page = socket.assigns.per_page
         new_page = page + 1
+        filters = socket.assigns.filters
 
         additional_elems =
           unquote(list_function).(
-            page: new_page,
-            order_by: order_by,
-            order: order,
-            per_page: per_page
+            %{page: new_page, order_by: order_by, order: order, per_page: per_page},
+            filters
           )
 
         {:noreply,
@@ -61,6 +64,7 @@ defmodule PhoenixRiseWeb.Ordering do
         order = socket.assigns.order
         page = unquote(default_start_page)
         per_page = socket.assigns.per_page
+        filters = socket.assigns.filters
 
         new_order =
           (fn
@@ -74,10 +78,8 @@ defmodule PhoenixRiseWeb.Ordering do
 
         elems =
           unquote(list_function).(
-            order_by: new_order_by,
-            order: new_order,
-            page: page,
-            per_page: per_page
+            %{order_by: new_order_by, order: new_order, page: page, per_page: per_page},
+            filters
           )
 
         {:noreply,
@@ -85,7 +87,41 @@ defmodule PhoenixRiseWeb.Ordering do
          |> assign(page: page)
          |> assign(per_page: per_page)
          |> assign(order_by: new_order_by)
-         |> assign(order: new_order)}
+         |> assign(order: new_order)
+         |> assign(filters: filters)}
+      end
+
+      def handle_event("filter", value, socket) do
+        page = socket.assigns.page
+        order_by = socket.assigns.order_by
+        order = socket.assigns.order
+        per_page = socket.assigns.per_page
+
+        filters =
+          Enum.reduce(value["filters"], socket.assigns.filters, fn
+            {name, ""}, filters ->
+              put_in(filters[name], nil)
+
+            {name, value}, filters ->
+              put_in(filters[name], value)
+
+            _, filters ->
+              filters
+          end)
+
+        IO.inspect(filters)
+
+        elems =
+          unquote(list_function).(
+            %{order_by: order_by, order: order, page: page, per_page: per_page},
+            filters
+          )
+
+        {:noreply,
+         stream(socket, unquote(stream_atom), elems, reset: true)
+         |> assign(page: page)
+         |> assign(per_page: per_page)
+         |> assign(filters: filters)}
       end
     end
   end

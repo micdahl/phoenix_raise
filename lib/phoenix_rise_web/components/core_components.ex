@@ -463,6 +463,7 @@ defmodule PhoenixRiseWeb.CoreComponents do
   attr :rows, :list, required: true
   attr :row_id, :any, default: nil, doc: "the function for generating the row id"
   attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
+  attr :filters, :list, default: []
 
   attr :row_item, :any,
     default: &Function.identity/1,
@@ -485,13 +486,25 @@ defmodule PhoenixRiseWeb.CoreComponents do
       <table class="mt-11 w-[40rem] sm:w-full">
         <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
           <tr>
-            <th
-              :for={col <- @col}
-              class="p-0 pb-4 pr-6 font-normal"
-              phx-click="order-by"
-              phx-value-order-column={col[:label]}
-            >
+            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal">
               <%= col[:label] %>
+              <button
+                type="button"
+                class="ml-1 opacity-50 hover:opacity-100"
+                phx-click="order-by"
+                phx-value-order-column={col[:label]}
+              >
+                <.icon name="hero-arrows-up-down" class="w-3 h-3" />
+              </button>
+              <form phx-change="filter" phx-submit="filter">
+                <input
+                  type="text"
+                  name={"filters[" <> col[:label] <> "]"}
+                  value={@filters[col[:label]]}
+                  phx-debounce="1000"
+                  class="mt-1 block w-full rounded-lg border-zinc-300 py-[7px] px-[11px] text-zinc-900 focus:outline-none focus:ring-1 sm:text-sm sm:leading-6"
+                />
+              </form>
             </th>
             <th class="relative p-0 pb-4"><span class="sr-only"><%= gettext("Actions") %></span></th>
           </tr>
