@@ -18,4 +18,19 @@ defmodule PhoenixRise.BasicsFixtures do
 
     country
   end
+
+  @doc """
+  Generate a contact.
+  """
+  def contact_fixture(attrs \\ %{}) do
+    {:ok, contact} =
+      attrs
+      |> Enum.into(%{
+        name: "some name",
+        country_id: country_fixture().id
+      })
+      |> PhoenixRise.Basics.create_contact()
+
+    contact
+  end
 end
